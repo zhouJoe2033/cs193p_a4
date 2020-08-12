@@ -12,7 +12,8 @@ struct EmojiArt: Codable {
     
     var backgroundURL: URL?
     var emojis = [Emoji]()
-    
+    var emojis_selected: Set<Emoji> = []
+     
     struct Emoji: Identifiable, Codable, Hashable {
         let id: Int
         let text: String
@@ -32,7 +33,7 @@ struct EmojiArt: Codable {
     var json: Data? {
         return try? JSONEncoder().encode(self)
     }
-    
+
     init() {}
     
     init?(json: Data?) {
@@ -42,12 +43,20 @@ struct EmojiArt: Codable {
             return nil
         }
     }
-    
+
     var uniqueEmojiId = 0
     
     mutating func addEmoji(_ text: String, x: Int, y: Int, size: Int) {
         uniqueEmojiId += 1
         emojis.append(Emoji(id: uniqueEmojiId, text: text, x: x, y: y, size: size))
+    }
+    
+    mutating func selectEmoji(_ emoji: Emoji) {
+        if !emojis_selected.contains(emoji){
+            emojis_selected.insert(emoji)
+        }else{
+            emojis_selected.remove(emoji)
+        }
     }
 }
 

@@ -11,6 +11,7 @@ import SwiftUI
 struct EmojiArtDocumentView: View {
     @ObservedObject var document: EmojiArtDocument
     
+    
     var body: some View {
         VStack {
             ScrollView(.horizontal) {
@@ -31,10 +32,12 @@ struct EmojiArtDocumentView: View {
                     )
                     
                     
-                    ForEach(self.document.emojis){ emoji in
+                    ForEach(self.document.emojis) { emoji in
                         Text(emoji.text)
+                            .underline(self.document.emojis_selected.contains(emoji) ? true : false, color: .black)
                             .font(animatableWithSize: emoji.fontSize * self.zoomScale)
                             .position(self.position(for: emoji, in: geometry.size))
+                            .gesture(self.selectGesture(emoji))
                     }
                 }
                 .clipped()
@@ -54,14 +57,14 @@ struct EmojiArtDocumentView: View {
         }
     }
     
+
     
     
-    
-    
-    
-    
-    
-    
+    private func selectGesture(_ emoji: EmojiArt.Emoji) -> some Gesture {
+        TapGesture(count: 1)
+            .onEnded { self.document.selectEmoji(emoji) }
+    }
+
     
     
     
@@ -78,7 +81,7 @@ struct EmojiArtDocumentView: View {
     
     @State private var steadyStateZoomScale: CGFloat = 1.0
     @GestureState private var gestureZoomScale: CGFloat = 1.0
-    
+
     private var zoomScale: CGFloat {
         steadyStateZoomScale * gestureZoomScale
     }

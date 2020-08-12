@@ -1,10 +1,8 @@
-//
 //  EmojiArtDocument.swift
 //  cs193p_a4
 //
 //  Created by Joe on 2020-08-11.
 //  Copyright © 2020 Joe. All rights reserved.
-//
 
 import SwiftUI
 
@@ -16,21 +14,24 @@ class EmojiArtDocument: ObservableObject {
     
     @Published private var emojiArt: EmojiArt = EmojiArt() {
         willSet { objectWillChange.send() }
-        didSet {
-            UserDefaults.standard.set(emojiArt.json, forKey: EmojiArtDocument.untitled)
-        }
+        didSet { UserDefaults.standard.set(emojiArt.json, forKey: EmojiArtDocument.untitled) }
     }
     
     @Published private(set) var backgroundImage: UIImage?
     
     var emojis: [EmojiArt.Emoji] { emojiArt.emojis }
-    
+    var emojis_selected: Set<EmojiArt.Emoji> { emojiArt.emojis_selected }
+
     init() {
         emojiArt = EmojiArt(json: UserDefaults.standard.data(forKey: EmojiArtDocument.untitled)) ?? EmojiArt()
         fetchBackgroundImageData()
     }
-    
+        
     // MARK: - Intents
+    func selectEmoji(_ emoji: EmojiArt.Emoji) {
+        emojiArt.selectEmoji(emoji)
+    }
+
     func addEmoji(_ emoji: String, at location: CGPoint, size: CGFloat) {
         emojiArt.addEmoji(emoji, x: Int(location.x), y: Int(location.y), size: Int(size))
     }
