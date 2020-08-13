@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 struct EmojiArt: Codable {
     
@@ -34,7 +35,9 @@ struct EmojiArt: Codable {
         return try? JSONEncoder().encode(self)
     }
 
-    init() {}
+    init() {
+        reSetSelectedEmojis()
+    }
     
     init?(json: Data?) {
         if json != nil, let newEmojiArt = try? JSONDecoder().decode(EmojiArt.self, from: json!) {
@@ -42,10 +45,12 @@ struct EmojiArt: Codable {
         } else {
             return nil
         }
+        
+        reSetSelectedEmojis()
     }
 
-    var uniqueEmojiId = 0
-    
+    var uniqueEmojiId: Int = 0
+
     mutating func addEmoji(_ text: String, x: Int, y: Int, size: Int) {
         uniqueEmojiId += 1
         emojis.append(Emoji(id: uniqueEmojiId, text: text, x: x, y: y, size: size))
@@ -58,5 +63,18 @@ struct EmojiArt: Codable {
             emojis_selected.remove(emoji)
         }
     }
+    
+    //TODO task 2, clear selected emojis when re-start the app, see if can use @State instead
+    mutating func reSetSelectedEmojis() {
+        emojis_selected = []
+    }
+    
+    mutating func deleteEmoji(_ emoji: Emoji) {
+        emojis.remove(at: emojis.firstIndex(of: emoji)!)
+        emojis_selected.remove(emoji)
+    }
+    
+    
+    
 }
 

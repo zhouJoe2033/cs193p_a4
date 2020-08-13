@@ -10,8 +10,7 @@ import SwiftUI
 
 struct EmojiArtDocumentView: View {
     @ObservedObject var document: EmojiArtDocument
-    
-    
+
     var body: some View {
         VStack {
             ScrollView(.horizontal) {
@@ -30,14 +29,15 @@ struct EmojiArtDocumentView: View {
                     Color.white.overlay(OptionalImage(uiImage: self.document.backgroundImage)
                         .scaleEffect(self.zoomScale)
                     )
-                    
-                    
+
                     ForEach(self.document.emojis) { emoji in
                         Text(emoji.text)
-                            .underline(self.document.emojis_selected.contains(emoji) ? true : false, color: .black)
+                            .underline(self.document.emojis_selected.contains(emoji), color: .black)
                             .font(animatableWithSize: emoji.fontSize * self.zoomScale)
                             .position(self.position(for: emoji, in: geometry.size))
-                            .gesture(self.selectGesture(emoji))
+                            .gesture(self.selectEmojisGesture(emoji))
+                            .gesture(self.deleteEmojiGesture(emoji))
+                            .gesture(self.dragEmojisGesture(emoji))
                     }
                 }
                 .clipped()
@@ -46,29 +46,17 @@ struct EmojiArtDocumentView: View {
                     var location = geometry.convert(location, from: .global)
                     
                     location = CGPoint(x: location.x - geometry.size.width/2, y: location.y - geometry.size.height/2)
+                    location = CGPoint(x: location.x - self.panOffSet.width, y: location.y - self.panOffSet.height)
+                    location = CGPoint(x: location.x / self.zoomScale, y: location.y / self.zoomScale)
                     
                     return self.drop(providers: providers, at: location)
                 }
+                .gesture(self.tapBackgroundGesture())
             }
-            
-            
-            
-            
         }
     }
     
 
-    
-    
-    private func selectGesture(_ emoji: EmojiArt.Emoji) -> some Gesture {
-        TapGesture(count: 1)
-            .onEnded { self.document.selectEmoji(emoji) }
-    }
-
-    
-    
-    
-    
     
     
     
@@ -86,18 +74,58 @@ struct EmojiArtDocumentView: View {
         steadyStateZoomScale * gestureZoomScale
     }
     
+    private func tapBackgroundGesture() -> some Gesture {
+        TapGesture(count: 1)
+            .onEnded { self.document.reSetSelectedEmojis()}
+    }
     
+    private func deleteEmojiGesture(_ emoji: EmojiArt.Emoji) -> some Gesture {
+        LongPressGesture(minimumDuration: 1)
+            .onEnded { _ in
+                self.document.deleteEmoji(emoji)
+        }
+    }
     
+    private func selectEmojisGesture(_ emoji: EmojiArt.Emoji) -> some Gesture {
+        TapGesture(count: 1)
+            .onEnded { self.document.selectEmoji(emoji) }
+    }
     
+    @State private var steadyStatePanOffset: CGSize = .zero
+    @GestureState private var gesturePanOffset: CGSize = .zero
+
+    private var panOffSet: CGSize {
+        (steadyStatePanOffset + gesturePanOffset ) * zoomScale
+    }
     
+    private func dragEmojisGesture(_ emoji: EmojiArt.Emoji) -> some Gesture {
+        DragGesture()
+            .updating($gesturePanOffset) { latestDragGestureValue, gesturePanOffset, transcation in
+                gesturePanOffset = latestDragGestureValue.translation / self.zoomScale
+            }
+            .onEnded { finalDragGestureValue in
+                self.steadyStatePanOffset = self.steadyStatePanOffset + (finalDragGestureValue.translation / self.zoomScale)
+            }
+            .exclusively(before: selectEmojisGesture(emoji))
+    }
+  
     
-    
-    
+
+
     private func position(for emoji: EmojiArt.Emoji, in size: CGSize) -> CGPoint {
         var location = emoji.location
+    
         location = CGPoint(x: location.x * zoomScale, y: location.y * zoomScale)
         location = CGPoint(x: location.x + size.width/2, y: location.y + size.height/2)
-//        location = CGPoint(x: location.x + panOffSet.width, y: location.y + panOffSet.height)
+
+        if self.document.emojis_selected.count == 0 {
+            location = CGPoint(x: location.x + panOffSet.width, y: location.y + panOffSet.height)
+        } else {
+            if self.document.emojis_selected.contains(emoji) {
+                location = CGPoint(x: location.x + panOffSet.width, y: location.y + panOffSet.height)
+            }
+        }
+ 
         return location
     }
 
