@@ -40,6 +40,13 @@ class EmojiArtDocument: ObservableObject {
         emojiArt.addEmoji(emoji, x: Int(location.x), y: Int(location.y), size: Int(size))
     }
     
+    func moveEmoji(_ emoji: EmojiArt.Emoji, by position: CGPoint) {
+        if let index = emojiArt.emojis.firstIndex(matching: emoji) {
+            emojiArt.emojis[index].x = Int(position.x)
+            emojiArt.emojis[index].y = Int(position.y)
+        }
+    }
+    
     func scaleEmoji(_ emoji: EmojiArt.Emoji, by scale: CGFloat) {
         if let index = emojiArt.emojis.firstIndex(matching: emoji) {
             emojiArt.emojis[index].size = Int((CGFloat(emojiArt.emojis[index].size) * scale).rounded(.toNearestOrEven))
